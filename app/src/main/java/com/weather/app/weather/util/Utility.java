@@ -1,11 +1,22 @@
 package com.weather.app.weather.util;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.weather.app.weather.db.WeatherDB;
 import com.weather.app.weather.model.City;
 import com.weather.app.weather.model.County;
 import com.weather.app.weather.model.Province;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 /**
  * Created by zhangqinning on 15/8/8.
@@ -59,5 +70,41 @@ public class Utility {
                 return true;
             }
         }return false;
+    }
+
+    /**
+     * 解析服务器返回的JSON数据，存储的本地
+     */
+    public static void handleWeatherResponse(Context context,String response){
+        try{
+            JSONObject jsonObject=new JSONObject(response);
+            JSONObject weatherInfo=jsonObject.getJSONObject("weatherinfo");
+            String cityname=weatherInfo.getString("city");
+            String weatherCode=weatherInfo.getString("cityid");
+            String temp1=weatherInfo.getString("temp1");
+            String temp2=weatherInfo.getString("temp2");
+            String weatherDsp=weatherInfo.getString("weather");
+            String publishTime=weatherInfo.getString("ptime");
+            Log.d("Utility",cityname+" "+weatherCode+" "+weatherDsp);
+            saveWeatherInfo(context,cityname,weatherCode,temp1,temp2,weatherDsp,publishTime);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+    /**
+     * 天气信息存储到sharePreferences文件
+     */
+    public static void saveWeatherInfo(Context context,String cityname,String weatherCode,String temp1,String temp2,String weatherDsp,String publishTime){
+        SimpleDateFormat sdf=new SimpleDateFormat("yyyy年M月d日", Locale.CHINA);
+        SharedPreferences.Editor editor= PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putBoolean("city_selected",true);
+        editor.putString("city_name", cityname);
+        editor.putString("weather_code", weatherCode);
+        editor.putString("temp1", temp1);
+        editor.putString("temp2", temp2);
+        editor.putString("weather_desp", weatherDsp);
+        editor.putString("publish_item", publishTime);
+        editor.putString("current_date",sdf.format(new Date()));
+        editor.commit();
     }
 }
